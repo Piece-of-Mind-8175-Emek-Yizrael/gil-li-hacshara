@@ -12,9 +12,15 @@
 
 package frc.robot;
 
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkLowLevel.MotorType;
+
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -31,6 +37,12 @@ public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
     private RobotContainer m_robotContainer;
+
+    private WPI_VictorSPX m_right_motor = new WPI_VictorSPX(10);
+    private WPI_VictorSPX m_left_motor = new WPI_VictorSPX(11);
+    
+    DigitalInput toplimitSwitch = new DigitalInput(9);
+    DigitalInput dganit = new DigitalInput(3);
 
     /**
      * This function is run when the robot is first started up and should be
@@ -107,8 +119,23 @@ public class Robot extends TimedRobot {
     /**
      * This function is called periodically during operator control.
      */
+
     @Override
     public void teleopPeriodic() {
+        if (!toplimitSwitch.get()) {
+            m_left_motor.set(0.32);
+            m_right_motor.set(0.32);
+        } 
+        else if (!dganit.get()) {
+             m_left_motor.set(-0.25);
+            m_right_motor.set(-0.25);
+        }
+        else{
+            m_left_motor.set(0);
+            m_right_motor.set(0);
+        }
+
+
     }
 
     @Override
