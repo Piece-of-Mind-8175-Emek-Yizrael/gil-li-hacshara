@@ -12,11 +12,17 @@
 
 package frc.robot;
 
+import static frc.robot.Constants.CLOSE_ARM_SPEED;
+import static frc.robot.Constants.FOLD;
+import static frc.robot.Constants.FOLD_OF_SET;
+import static frc.robot.Constants.GROUND;
 import static frc.robot.Constants.ID_INTAKE;
 import static frc.robot.Constants.INTAKE_POWER;
 import static frc.robot.Constants.JOYSTICK_PORT;
+import static frc.robot.Constants.KG;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.A;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.B;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.Y;
 
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
@@ -26,6 +32,7 @@ import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -47,9 +54,15 @@ public class Robot extends TimedRobot {
     private CANSparkMax intakeMotor = new CANSparkMax(ID_INTAKE, MotorType.kBrushless);
     Joystick joystick = new Joystick(JOYSTICK_PORT); 
 
-    private final CANSparkMax liftMotor = new CANSparkMax(0, com.revrobotics.CANSparkLowLevel.MotorType.kBrushless);
+    private final CANSparkMax liftMotor = new CANSparkMax(5, com.revrobotics.CANSparkLowLevel.MotorType.kBrushless);
     private RelativeEncoder encoder = liftMotor.getEncoder();
-    private ArmFeedforward ff = new ArmFeedforward(0, 0.048, 0);
+    private ArmFeedforward ff = new ArmFeedforward(0, KG, 0);
+
+    DigitalInput foldSwitch = new DigitalInput(FOLD);
+    DigitalInput groundSwitch = new DigitalInput(GROUND);
+
+    private boolean toClose = false;
+    
 
     /**
      * This function is run when the robot is first started up and should be
@@ -86,6 +99,13 @@ public class Robot extends TimedRobot {
         CommandScheduler.getInstance().run();
         SmartDashboard.putNumber("arm encoder", encoder.getPosition());
         SmartDashboard.putNumber("gravity resist", resistGravity());
+
+        SmartDashboard.putBoolean("fold Switch", !foldSwitch.get());
+        SmartDashboard.putBoolean("ground Switch", !groundSwitch.get());
+
+        if(!foldSwitch.get()){
+            encoder.setPosition(FOLD_OF_SET);
+        }
     }
 
 
@@ -145,6 +165,21 @@ public class Robot extends TimedRobot {
         }
         else{
             intakeMotor.set(0);
+        }
+
+
+        if(joystick.getRawButton(Y)){
+            toClose = true;
+        }
+        if(!foldSwitch.get()){
+            toClose = false;
+        }
+
+        if(toClose){
+            liftMotor.set(resistGravity() - CLOSE_ARM_SPEED);
+        }
+        else{
+            liftMotor.set(resistGravity());
         }
     }
 
