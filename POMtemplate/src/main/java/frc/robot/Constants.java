@@ -32,5 +32,11 @@ public class Constants {
     public static final double INTAKE_POWER = 0.25;
     public static final int JOYSTICK_PORT = 0;
 
+    public static final int GROUND = 3;
+    public static final int FOLD = 4;
+
+    public static final Double KG = 0.048;
+    public static final Double FOLD_OF_SET = -0.323;
+    public static final double CLOSE_ARM_SPEED = 0.1;
 }
 

@@ -12,20 +12,32 @@
 
 package frc.robot;
 
-import com.revrobotics.CANSparkMax;
+import static frc.robot.Constants.CLOSE_ARM_SPEED;
+import static frc.robot.Constants.FOLD;
+import static frc.robot.Constants.FOLD_OF_SET;
+import static frc.robot.Constants.GROUND;
+import static frc.robot.Constants.ID_INTAKE;
+import static frc.robot.Constants.INTAKE_POWER;
+import static frc.robot.Constants.JOYSTICK_PORT;
+import static frc.robot.Constants.KG;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.A;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.B;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.Y;
+
 import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-
-import static frc.robot.Constants.*;
-import static frc.robot.POM_lib.Joysticks.JoystickConstants.*;
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the TimedRobot
@@ -41,10 +53,26 @@ public class Robot extends TimedRobot {
 
     private CANSparkMax intakeMotor = new CANSparkMax(ID_INTAKE, MotorType.kBrushless);
     Joystick joystick = new Joystick(JOYSTICK_PORT); 
+
+    private final CANSparkMax liftMotor = new CANSparkMax(5, com.revrobotics.CANSparkLowLevel.MotorType.kBrushless);
+    private RelativeEncoder encoder = liftMotor.getEncoder();
+    private ArmFeedforward ff = new ArmFeedforward(0, KG, 0);
+
+    DigitalInput foldSwitch = new DigitalInput(FOLD);
+    DigitalInput groundSwitch = new DigitalInput(GROUND);
+
+    private boolean toClose = false;
+    
+
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
+
+    public double resistGravity(){
+        return ff.calculate(encoder.getPosition(), 0);
+    }
+    
     @Override
     public void robotInit() {
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
@@ -52,6 +80,7 @@ public class Robot extends TimedRobot {
         m_robotContainer = RobotContainer.getInstance();
         HAL.report(tResourceType.kResourceType_Framework, tInstances.kFramework_RobotBuilder);
         enableLiveWindowInTest(true);
+        encoder.setPositionConversionFactor((1.0 / 50) * (16.0 / 42) * 2 * Math.PI);
     }
 
     /**
@@ -68,6 +97,15 @@ public class Robot extends TimedRobot {
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
+        SmartDashboard.putNumber("arm encoder", encoder.getPosition());
+        SmartDashboard.putNumber("gravity resist", resistGravity());
+
+        SmartDashboard.putBoolean("fold Switch", !foldSwitch.get());
+        SmartDashboard.putBoolean("ground Switch", !groundSwitch.get());
+
+        if(!foldSwitch.get()){
+            encoder.setPosition(FOLD_OF_SET);
+        }
     }
 
 
@@ -127,6 +165,21 @@ public class Robot extends TimedRobot {
         }
         else{
             intakeMotor.set(0);
+        }
+
+
+        if(joystick.getRawButton(Y)){
+            toClose = true;
+        }
+        if(!foldSwitch.get()){
+            toClose = false;
+        }
+
+        if(toClose){
+            liftMotor.set(resistGravity() - CLOSE_ARM_SPEED);
+        }
+        else{
+            liftMotor.set(resistGravity());
         }
     }
 
