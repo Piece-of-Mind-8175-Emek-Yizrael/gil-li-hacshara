@@ -22,9 +22,14 @@ import static frc.robot.Constants.JOYSTICK_PORT;
 import static frc.robot.Constants.KG;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.A;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.B;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.LEFT_STICK_X;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.LEFT_STICK_Y;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.RIGHT_STICK_X;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.Y;
 
 import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 
@@ -35,6 +40,7 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -62,7 +68,15 @@ public class Robot extends TimedRobot {
     DigitalInput groundSwitch = new DigitalInput(GROUND);
 
     private boolean toClose = false;
-    
+
+    WPI_TalonSRX leftTalonSPX = new WPI_TalonSRX(2);
+    WPI_VictorSPX leftVictorSPX = new WPI_VictorSPX(1);
+    WPI_TalonSRX rightTalonSPX = new WPI_TalonSRX(4);
+    WPI_VictorSPX rightVictorSPX = new WPI_VictorSPX(3);
+
+    private final DifferentialDrive m_drive =
+      new DifferentialDrive(leftTalonSPX::set, rightTalonSPX::set);
+
 
     /**
      * This function is run when the robot is first started up and should be
@@ -81,6 +95,9 @@ public class Robot extends TimedRobot {
         HAL.report(tResourceType.kResourceType_Framework, tInstances.kFramework_RobotBuilder);
         enableLiveWindowInTest(true);
         encoder.setPositionConversionFactor((1.0 / 50) * (16.0 / 42) * 2 * Math.PI);
+
+        leftVictorSPX.follow(leftTalonSPX);
+        rightVictorSPX.follow(rightTalonSPX);
     }
 
     /**
@@ -181,6 +198,10 @@ public class Robot extends TimedRobot {
         else{
             liftMotor.set(resistGravity());
         }
+
+        m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y), joystick.getRawAxis(RIGHT_STICK_X));
+
+
     }
 
     @Override
