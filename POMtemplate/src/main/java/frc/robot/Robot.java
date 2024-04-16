@@ -41,10 +41,20 @@ public class Robot extends TimedRobot {
 
     private CANSparkMax intakeMotor = new CANSparkMax(ID_INTAKE, MotorType.kBrushless);
     Joystick joystick = new Joystick(JOYSTICK_PORT); 
+
+    private final CANSparkMax liftMotor = new CANSparkMax(0, com.revrobotics.CANSparkLowLevel.MotorType.kBrushless);
+    private RelativeEncoder encoder = liftMotor.getEncoder();
+    private ArmFeedforward ff = new ArmFeedforward(0, 0.048, 0);
+
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
+
+    public double resistGravity(){
+        return ff.calculate(encoder.getPosition(), 0);
+    }
+    
     @Override
     public void robotInit() {
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
@@ -52,6 +62,7 @@ public class Robot extends TimedRobot {
         m_robotContainer = RobotContainer.getInstance();
         HAL.report(tResourceType.kResourceType_Framework, tInstances.kFramework_RobotBuilder);
         enableLiveWindowInTest(true);
+        encoder.setPositionConversionFactor((1.0 / 50) * (16.0 / 42) * 2 * Math.PI);
     }
 
     /**
@@ -68,6 +79,8 @@ public class Robot extends TimedRobot {
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
+        SmartDashboard.putNumber("arm encoder", encoder.getPosition());
+        SmartDashboard.putNumber("gravity resist", resistGravity());
     }
 
 
