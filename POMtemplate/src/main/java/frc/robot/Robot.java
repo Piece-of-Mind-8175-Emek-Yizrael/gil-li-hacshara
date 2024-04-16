@@ -37,13 +37,6 @@ public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
     private RobotContainer m_robotContainer;
-
-    private WPI_VictorSPX m_right_motor = new WPI_VictorSPX(10);
-    private WPI_VictorSPX m_left_motor = new WPI_VictorSPX(11);
-    
-    DigitalInput toplimitSwitch = new DigitalInput(9);
-    DigitalInput dganit = new DigitalInput(3);
-
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
@@ -122,19 +115,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        if (!toplimitSwitch.get()) {
-            m_left_motor.set(0.32);
-            m_right_motor.set(0.32);
-        } 
-        else if (!dganit.get()) {
-             m_left_motor.set(-0.25);
-            m_right_motor.set(-0.25);
-        }
-        else{
-            m_left_motor.set(0);
-            m_right_motor.set(0);
-        }
-
 
     }
 
