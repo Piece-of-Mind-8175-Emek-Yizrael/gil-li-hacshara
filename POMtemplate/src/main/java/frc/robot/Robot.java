@@ -12,20 +12,25 @@
 
 package frc.robot;
 
-import com.revrobotics.CANSparkMax;
+import static frc.robot.Constants.ID_INTAKE;
+import static frc.robot.Constants.INTAKE_POWER;
+import static frc.robot.Constants.JOYSTICK_PORT;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.A;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.B;
+
 import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
-import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-
-import static frc.robot.Constants.*;
-import static frc.robot.POM_lib.Joysticks.JoystickConstants.*;
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the TimedRobot
