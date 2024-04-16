@@ -28,5 +28,9 @@ public class Constants {
     *   public static final int kRightMotor2Port = 3; 
     * }
     */ 
+    public static final int ID_INTAKE = 6;
+    public static final double INTAKE_POWER = 0.25;
+    public static final int JOYSTICK_PORT = 0;
+
 }
 

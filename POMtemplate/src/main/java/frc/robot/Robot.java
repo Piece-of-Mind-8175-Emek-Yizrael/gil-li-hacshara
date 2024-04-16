@@ -12,7 +12,6 @@
 
 package frc.robot;
 
-import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
@@ -25,6 +24,8 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
+import static frc.robot.Constants.*;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.*;
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the TimedRobot
@@ -37,6 +38,9 @@ public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
     private RobotContainer m_robotContainer;
+
+    private CANSparkMax intakeMotor = new CANSparkMax(ID_INTAKE, MotorType.kBrushless);
+    Joystick joystick = new Joystick(JOYSTICK_PORT); 
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
@@ -115,7 +119,15 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-
+        if(joystick.getRawButton(B)){
+            intakeMotor.set(INTAKE_POWER);
+        }
+        else if(joystick.getRawButton(A)){
+            intakeMotor.set(-INTAKE_POWER);
+        }
+        else{
+            intakeMotor.set(0);
+        }
     }
 
     @Override
