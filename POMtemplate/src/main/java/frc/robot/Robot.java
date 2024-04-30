@@ -166,6 +166,10 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             m_autonomousCommand.cancel();
         }
+
+        leftVictorSPX.setInverted(true);
+        leftTalonSPX.setInverted(true);
+        
     }
 
     /**
@@ -199,9 +203,10 @@ public class Robot extends TimedRobot {
             liftMotor.set(resistGravity());
         }
 
-        m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y), joystick.getRawAxis(RIGHT_STICK_X));
+        m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y)*0.4, joystick.getRawAxis(LEFT_STICK_X)*0.4);
 
 
+        
     }
 
     @Override
