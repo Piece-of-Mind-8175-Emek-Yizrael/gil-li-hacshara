@@ -208,6 +208,10 @@ public class Robot extends TimedRobot {
             toClose = true;
             toOpen = false;
         }    
+        if(joystick.getRawButtonPressed(Y)){
+            toClose = false;
+            toOpen = false;
+        }    
 
 
 
@@ -237,19 +241,9 @@ public class Robot extends TimedRobot {
             liftMotor.set(resistGravity());
         }
 
-
-        if(joystick.getRawButtonPressed(X)){
-            toOpen = true;
-        }
-        if(toOpen){
-            liftMotor.set(LIFT_MOTOR_SPEED + resistGravity());   
-        }
-            // if(!foldSwitch.get()){
-                //     toOpen = false;
-                //     liftMotor.set(0);
-                // }      
+ 
         m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y)*SLOW_DRIVE, joystick.getRawAxis(LEFT_STICK_X)*SLOW_DRIVE);
-    }
+    }   
 
 
         
