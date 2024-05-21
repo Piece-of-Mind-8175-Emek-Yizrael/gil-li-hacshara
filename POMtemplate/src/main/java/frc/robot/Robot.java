@@ -77,6 +77,7 @@ public class Robot extends TimedRobot {
     private boolean toClose = false;
     private boolean toOpen = false;
     private boolean isIntake = false;
+    private boolean openClose = false;
 
     WPI_TalonSRX leftTalonSPX = new WPI_TalonSRX(2);
     WPI_VictorSPX leftVictorSPX = new WPI_VictorSPX(1);
@@ -183,12 +184,12 @@ public class Robot extends TimedRobot {
         
     }
 
-    /**
-     * This function is called periodically during operator control.
-     */
+/**
+ * This function is called periodically during operator control.
+ */
 
-    @Override
-    public void teleopPeriodic() {
+@Override
+public void teleopPeriodic() {
         if(joystick.getPOV() == POV_LEFT){
             intakeMotor.set(INTAKE_SPEED);
         }
@@ -198,7 +199,7 @@ public class Robot extends TimedRobot {
         if(joystick.getPOV() == POV_NONE){
             intakeMotor.set(0);
         }
-        
+
         if(joystick.getRawButtonPressed(A)){
             toOpen = true;
             toClose = false;
@@ -212,8 +213,19 @@ public class Robot extends TimedRobot {
             toClose = false;
             toOpen = false;
         }    
+        if(joystick.getRawButtonPressed(X)){
+            openClose = true;
+            toOpen = true;
+            toClose = false;
+        }    
+        if(joystick.getRawButtonReleased(X)){
+            isIntake = false;
 
+        }
 
+        if(!groundSwitch.get() && !toOpen){
+            openClose = false;
+        }
 
         if(toOpen){
             if(groundSwitch.get()){                
@@ -222,6 +234,7 @@ public class Robot extends TimedRobot {
             else{
                 toOpen = false;
                 liftMotor.set(0);
+                isIntake = true;
             }
         }
         else if(toClose){
@@ -237,9 +250,21 @@ public class Robot extends TimedRobot {
         else if(!groundSwitch.get() || !foldSwitch.get()){
             liftMotor.set(0);
         }
+        
+        
         else{
             liftMotor.set(resistGravity());
         }
+        
+        if(isIntake){
+            intakeMotor.set(-INTAKE_SPEED);
+        }
+        if(!isIntake && openClose){
+            intakeMotor.set(0);
+            toClose = true;
+            toOpen = false;
+        }
+        
 
  
         m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y)*SLOW_DRIVE, joystick.getRawAxis(LEFT_STICK_X)*SLOW_DRIVE);
