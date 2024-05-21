@@ -22,6 +22,7 @@ import static frc.robot.Constants.INTAKE_SPEED;
 import static frc.robot.Constants.JOYSTICK_PORT;
 import static frc.robot.Constants.KG;
 import static frc.robot.Constants.LIFT_MOTOR_SPEED;
+import static frc.robot.Constants.SLOW_DRIVE;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.A;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.B;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.LEFT_STICK_X;
@@ -247,7 +248,7 @@ public class Robot extends TimedRobot {
                 //     toOpen = false;
                 //     liftMotor.set(0);
                 // }      
-        m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y)*0.4, joystick.getRawAxis(LEFT_STICK_X)*0.4);
+        m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y)*SLOW_DRIVE, joystick.getRawAxis(LEFT_STICK_X)*SLOW_DRIVE);
     }
 
 

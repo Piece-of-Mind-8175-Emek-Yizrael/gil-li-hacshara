@@ -40,5 +40,6 @@ public class Constants {
     public static final Double CLOSE_ARM_SPEED = 0.1;
     public static final Double INTAKE_SPEED = 0.3;
     public static final Double LIFT_MOTOR_SPEED = 0.1;
+    public static final Double SLOW_DRIVE = 0.5;
 }
 
