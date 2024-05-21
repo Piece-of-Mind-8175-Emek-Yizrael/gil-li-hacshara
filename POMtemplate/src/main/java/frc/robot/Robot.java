@@ -25,11 +25,13 @@ import static frc.robot.Constants.LIFT_MOTOR_SPEED;
 import static frc.robot.Constants.SLOW_DRIVE;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.A;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.B;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.LB;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.LEFT_STICK_X;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.LEFT_STICK_Y;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.POV_LEFT;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.POV_NONE;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.POV_RIGHT;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.RB;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.RIGHT_TRIGGER;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.X;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.Y;
@@ -78,7 +80,8 @@ public class Robot extends TimedRobot {
     private boolean toOpen = false;
     private boolean isIntake = false;
     private boolean openClose = false;
-
+    private boolean isIntakePositive = true;
+    
     WPI_TalonSRX leftTalonSPX = new WPI_TalonSRX(2);
     WPI_VictorSPX leftVictorSPX = new WPI_VictorSPX(1);
     WPI_TalonSRX rightTalonSPX = new WPI_TalonSRX(4);
@@ -105,7 +108,6 @@ public class Robot extends TimedRobot {
         HAL.report(tResourceType.kResourceType_Framework, tInstances.kFramework_RobotBuilder);
         enableLiveWindowInTest(true);
         encoder.setPositionConversionFactor((1.0 / 50) * (16.0 / 42) * 2 * Math.PI);
-
         leftVictorSPX.follow(leftTalonSPX);
         rightVictorSPX.follow(rightTalonSPX);
     }
@@ -129,7 +131,6 @@ public class Robot extends TimedRobot {
 
         SmartDashboard.putBoolean("fold Switch", !foldSwitch.get());
         SmartDashboard.putBoolean("ground Switch", !groundSwitch.get());
-
 
 
         if(!foldSwitch.get()){
@@ -204,7 +205,6 @@ public void teleopPeriodic() {
             toOpen = true;
             toClose = false;
         }    
-        
         if(joystick.getRawButtonPressed(B)){
             toClose = true;
             toOpen = false;
@@ -217,11 +217,25 @@ public void teleopPeriodic() {
             openClose = true;
             toOpen = true;
             toClose = false;
+            isIntakePositive = false;
         }    
         if(joystick.getRawButtonReleased(X)){
             isIntake = false;
-
+            
         }
+        
+        if(joystick.getRawButtonPressed(LB)){
+            openClose = true;
+            toOpen = true;
+            toClose = false;
+            isIntakePositive = true;
+        }
+        else if(joystick.getRawButtonReleased(LB)){
+            isIntake = false;
+        }
+
+
+
 
         if(!groundSwitch.get() && !toOpen){
             openClose = false;
@@ -257,7 +271,12 @@ public void teleopPeriodic() {
         }
         
         if(isIntake){
-            intakeMotor.set(-INTAKE_SPEED);
+            if(isIntakePositive){
+                intakeMotor.set(INTAKE_SPEED);
+            }
+            else{
+                intakeMotor.set(-INTAKE_SPEED);
+            }
         }
         if(!isIntake && openClose){
             intakeMotor.set(0);
