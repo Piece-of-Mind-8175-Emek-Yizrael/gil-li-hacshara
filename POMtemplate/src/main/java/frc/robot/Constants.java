@@ -37,6 +37,8 @@ public class Constants {
 
     public static final Double KG = 0.048;
     public static final Double FOLD_OF_SET = -0.323;
-    public static final double CLOSE_ARM_SPEED = 0.1;
+    public static final Double CLOSE_ARM_SPEED = 0.1;
+    public static final Double INTAKE_SPEED = 0.3;
+    public static final Double LIFT_MOTOR_SPEED = 0.1;
 }
 

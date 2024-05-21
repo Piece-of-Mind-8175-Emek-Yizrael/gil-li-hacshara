@@ -18,18 +18,24 @@ import static frc.robot.Constants.FOLD_OF_SET;
 import static frc.robot.Constants.GROUND;
 import static frc.robot.Constants.ID_INTAKE;
 import static frc.robot.Constants.INTAKE_POWER;
+import static frc.robot.Constants.INTAKE_SPEED;
 import static frc.robot.Constants.JOYSTICK_PORT;
 import static frc.robot.Constants.KG;
+import static frc.robot.Constants.LIFT_MOTOR_SPEED;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.A;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.B;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.LEFT_STICK_X;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.LEFT_STICK_Y;
-import static frc.robot.POM_lib.Joysticks.JoystickConstants.RIGHT_STICK_X;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.POV_LEFT;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.POV_NONE;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.POV_RIGHT;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.RIGHT_TRIGGER;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.X;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.Y;
 
-import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
+import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 
@@ -68,6 +74,8 @@ public class Robot extends TimedRobot {
     DigitalInput groundSwitch = new DigitalInput(GROUND);
 
     private boolean toClose = false;
+    private boolean toOpen = false;
+    private boolean isIntake = false;
 
     WPI_TalonSRX leftTalonSPX = new WPI_TalonSRX(2);
     WPI_VictorSPX leftVictorSPX = new WPI_VictorSPX(1);
@@ -119,6 +127,8 @@ public class Robot extends TimedRobot {
 
         SmartDashboard.putBoolean("fold Switch", !foldSwitch.get());
         SmartDashboard.putBoolean("ground Switch", !groundSwitch.get());
+
+
 
         if(!foldSwitch.get()){
             encoder.setPosition(FOLD_OF_SET);
@@ -178,36 +188,71 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        if(joystick.getRawButton(B)){
-            intakeMotor.set(INTAKE_POWER);
+        if(joystick.getPOV() == POV_LEFT){
+            intakeMotor.set(INTAKE_SPEED);
         }
-        else if(joystick.getRawButton(A)){
-            intakeMotor.set(-INTAKE_POWER);
+        if(joystick.getPOV() == POV_RIGHT){
+            intakeMotor.set(-INTAKE_SPEED);
         }
-        else{
+        if(joystick.getPOV() == POV_NONE){
             intakeMotor.set(0);
         }
-
-
-        if(joystick.getRawButton(Y)){
-            toClose = true;
-        }
-        if(!foldSwitch.get()){
+        
+        if(joystick.getRawButtonPressed(A)){
+            toOpen = true;
             toClose = false;
+        }    
+        
+        if(joystick.getRawButtonPressed(B)){
+            toClose = true;
+            toOpen = false;
+        }    
+
+
+
+        if(toOpen){
+            if(groundSwitch.get()){                
+                liftMotor.set(LIFT_MOTOR_SPEED + resistGravity());   
+            }
+            else{
+                toOpen = false;
+                liftMotor.set(0);
+            }
+        }
+        else if(toClose){
+            if(foldSwitch.get()){                
+                liftMotor.set(-LIFT_MOTOR_SPEED + resistGravity());   
+            }
+            else{
+                toClose = false;
+                liftMotor.set(0);
+            }
         }
 
-        if(toClose){
-            liftMotor.set(resistGravity() - CLOSE_ARM_SPEED);
+        else if(!groundSwitch.get() || !foldSwitch.get()){
+            liftMotor.set(0);
         }
         else{
             liftMotor.set(resistGravity());
         }
 
+
+        if(joystick.getRawButtonPressed(X)){
+            toOpen = true;
+        }
+        if(toOpen){
+            liftMotor.set(LIFT_MOTOR_SPEED + resistGravity());   
+        }
+            // if(!foldSwitch.get()){
+                //     toOpen = false;
+                //     liftMotor.set(0);
+                // }      
         m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y)*0.4, joystick.getRawAxis(LEFT_STICK_X)*0.4);
+    }
 
 
         
-    }
+    
 
     @Override
     public void testInit() {
