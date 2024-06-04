@@ -18,7 +18,7 @@ import static frc.robot.Constants.FOLD_OF_SET;
 import static frc.robot.Constants.GROUND;
 import static frc.robot.Constants.ID_INTAKE;
 import static frc.robot.Constants.INTAKE_POWER;
-import static frc.robot.Constants.INTAKE_SPEED;
+import static frc.robot.Constants.*;
 import static frc.robot.Constants.JOYSTICK_PORT;
 import static frc.robot.Constants.KG;
 import static frc.robot.Constants.LIFT_MOTOR_SPEED;
@@ -38,6 +38,7 @@ import static frc.robot.POM_lib.Joysticks.JoystickConstants.Y;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
+import com.ctre.phoenix.sensors.PigeonIMU;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -84,10 +85,13 @@ public class Robot extends TimedRobot {
     private boolean openClose = false;
     private boolean isIntakePositive = true;
     
-    WPI_TalonSRX leftTalonSPX = new WPI_TalonSRX(2);
-    WPI_VictorSPX leftVictorSPX = new WPI_VictorSPX(1);
-    WPI_TalonSRX rightTalonSPX = new WPI_TalonSRX(4);
-    WPI_VictorSPX rightVictorSPX = new WPI_VictorSPX(3);
+
+
+    WPI_TalonSRX leftTalonSPX = new WPI_TalonSRX(LEFT_TALON_SRX);
+    WPI_VictorSPX leftVictorSPX = new WPI_VictorSPX(LEFT_VICTOR_SPX);
+    WPI_TalonSRX rightTalonSPX = new WPI_TalonSRX(RIGHT_TALON_SRX);
+    WPI_VictorSPX rightVictorSPX = new WPI_VictorSPX(RIGHT_VICTOR_SPX);
+
 
     private final DifferentialDrive m_drive =
       new DifferentialDrive(leftTalonSPX::set, rightTalonSPX::set);
