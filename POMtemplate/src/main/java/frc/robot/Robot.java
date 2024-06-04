@@ -46,6 +46,7 @@ import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -62,6 +63,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  */
 public class Robot extends TimedRobot {
 
+    
     private Command m_autonomousCommand;
 
     private RobotContainer m_robotContainer;
@@ -191,6 +193,7 @@ public class Robot extends TimedRobot {
 
 @Override
 public void teleopPeriodic() {
+        SmartDashboard.putNumber("arm power", liftMotor.get());
         if(joystick.getPOV() == POV_LEFT){
             intakeMotor.set(INTAKE_SPEED);
         }
@@ -209,7 +212,7 @@ public void teleopPeriodic() {
             toClose = true;
             toOpen = false;
         }    
-        if(joystick.getRawButtonPressed(Y)){
+        if(joystick.getRawButtonPressed(LB)){
             toClose = false;
             toOpen = false;
         }    
@@ -218,29 +221,33 @@ public void teleopPeriodic() {
             toOpen = true;
             toClose = false;
             isIntakePositive = false;
+            isIntake = false;
         }    
         if(joystick.getRawButtonReleased(X)){
             isIntake = false;
-            
+            toClose = true;
+            toOpen = false;
         }
-        
-        if(joystick.getRawButtonPressed(LB)){
+        if(joystick.getRawButtonPressed(Y)){
             openClose = true;
             toOpen = true;
             toClose = false;
             isIntakePositive = true;
-        }
-        else if(joystick.getRawButtonReleased(LB)){
             isIntake = false;
         }
-
-
-
-
-        if(!groundSwitch.get() && !toOpen){
-            openClose = false;
+        else if(joystick.getRawButtonReleased(Y)){
+            isIntake = false;
+            toClose = true;
+            toOpen = false;
         }
 
+
+        
+
+        if(groundSwitch.get() && toClose){
+            openClose = false;
+        }
+        
         if(toOpen){
             if(groundSwitch.get()){                
                 liftMotor.set(LIFT_MOTOR_SPEED + resistGravity());   
@@ -270,26 +277,36 @@ public void teleopPeriodic() {
             liftMotor.set(resistGravity());
         }
         
-        if(isIntake){
-            if(isIntakePositive){
-                intakeMotor.set(INTAKE_SPEED);
+        // if(isIntake && openClose){
+        //     if(isIntakePositive){
+        //         intakeMotor.set(INTAKE_SPEED);
+        //     }
+        //     else{
+        //         intakeMotor.set(-INTAKE_SPEED);
+        //     }
+        // }
+
+
+        if(openClose){
+            if (!groundSwitch.get()){
+                if(isIntakePositive){
+                    intakeMotor.set(INTAKE_SPEED);
+                }
+                else{
+                    intakeMotor.set(-INTAKE_SPEED);
+                }
             }
             else{
-                intakeMotor.set(-INTAKE_SPEED);
+                intakeMotor.set(0);
             }
         }
-        if(!isIntake && openClose){
-            intakeMotor.set(0);
-            toClose = true;
-            toOpen = false;
-        }
         
-
- 
+        
+        
         m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y)*SLOW_DRIVE, joystick.getRawAxis(LEFT_STICK_X)*SLOW_DRIVE);
     }   
-
-
+    
+    
         
     
 
