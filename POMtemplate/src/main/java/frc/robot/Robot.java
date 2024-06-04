@@ -186,24 +186,11 @@ public class Robot extends TimedRobot {
         leftTalonSPX.setInverted(true);
         
     }
-
-/**
- * This function is called periodically during operator control.
- */
-
-@Override
-public void teleopPeriodic() {
-        SmartDashboard.putNumber("arm power", liftMotor.get());
-        if(joystick.getPOV() == POV_LEFT){
-            intakeMotor.set(INTAKE_SPEED);
-        }
-        if(joystick.getPOV() == POV_RIGHT){
-            intakeMotor.set(-INTAKE_SPEED);
-        }
-        if(joystick.getPOV() == POV_NONE){
-            intakeMotor.set(0);
-        }
-
+    
+    /**
+     * This function is called periodically during operator control.
+     */
+    public void joystickButton(){
         if(joystick.getRawButtonPressed(A)){
             toOpen = true;
             toClose = false;
@@ -240,14 +227,27 @@ public void teleopPeriodic() {
             toClose = true;
             toOpen = false;
         }
-
-
+    }
+    
+    
+    public void doIntake(){
         
+        if(joystick.getPOV() == POV_LEFT){
+            intakeMotor.set(INTAKE_SPEED);
+        }
+        if(joystick.getPOV() == POV_RIGHT){
+            intakeMotor.set(-INTAKE_SPEED);
+        }
+        if(joystick.getPOV() == POV_NONE){
+            intakeMotor.set(0);
+        }
+    }
 
+
+    private void moveArm(){        
         if(groundSwitch.get() && toClose){
             openClose = false;
         }
-        
         if(toOpen){
             if(groundSwitch.get()){                
                 liftMotor.set(LIFT_MOTOR_SPEED + resistGravity());   
@@ -267,7 +267,7 @@ public void teleopPeriodic() {
                 liftMotor.set(0);
             }
         }
-
+    
         else if(!groundSwitch.get() || !foldSwitch.get()){
             liftMotor.set(0);
         }
@@ -276,17 +276,8 @@ public void teleopPeriodic() {
         else{
             liftMotor.set(resistGravity());
         }
-        
-        // if(isIntake && openClose){
-        //     if(isIntakePositive){
-        //         intakeMotor.set(INTAKE_SPEED);
-        //     }
-        //     else{
-        //         intakeMotor.set(-INTAKE_SPEED);
-        //     }
-        // }
-
-
+    
+    
         if(openClose){
             if (!groundSwitch.get()){
                 if(isIntakePositive){
@@ -301,6 +292,13 @@ public void teleopPeriodic() {
             }
         }
         
+    }
+    @Override
+    public void teleopPeriodic() {
+        doIntake();
+        joystickButton();
+        moveArm();
+
         
         
         m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y)*SLOW_DRIVE, joystick.getRawAxis(LEFT_STICK_X)*SLOW_DRIVE);
