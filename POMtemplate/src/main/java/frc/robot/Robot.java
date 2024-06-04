@@ -33,6 +33,7 @@ import static frc.robot.POM_lib.Joysticks.JoystickConstants.POV_NONE;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.POV_RIGHT;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.RB;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.RIGHT_TRIGGER;
+import static frc.robot.POM_lib.Joysticks.JoystickConstants.START;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.X;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.Y;
 
@@ -92,6 +93,9 @@ public class Robot extends TimedRobot {
     WPI_TalonSRX rightTalonSPX = new WPI_TalonSRX(RIGHT_TALON_SRX);
     WPI_VictorSPX rightVictorSPX = new WPI_VictorSPX(RIGHT_VICTOR_SPX);
 
+    PigeonIMU gyro = new PigeonIMU(7);
+    private double lastAngle = 0;
+    private boolean notToTurn = true;
 
     private final DifferentialDrive m_drive =
       new DifferentialDrive(leftTalonSPX::set, rightTalonSPX::set);
@@ -137,6 +141,9 @@ public class Robot extends TimedRobot {
 
         SmartDashboard.putBoolean("fold Switch", !foldSwitch.get());
         SmartDashboard.putBoolean("ground Switch", !groundSwitch.get());
+        SmartDashboard.putNumber("this angle", gyro.getYaw());
+        SmartDashboard.putNumber("last angle", lastAngle);
+        SmartDashboard.putBoolean("to turn", !notToTurn);
 
 
         if(!foldSwitch.get()){
@@ -194,7 +201,7 @@ public class Robot extends TimedRobot {
     /**
      * This function is called periodically during operator control.
      */
-    public void joystickButton(){
+    private void joystickButton(){
         if(joystick.getRawButtonPressed(A)){
             toOpen = true;
             toClose = false;
@@ -234,7 +241,7 @@ public class Robot extends TimedRobot {
     }
     
     
-    public void doIntake(){
+    private void doIntake(){
         
         if(joystick.getPOV() == POV_LEFT){
             intakeMotor.set(INTAKE_SPEED);
@@ -297,15 +304,29 @@ public class Robot extends TimedRobot {
         }
         
     }
+    private boolean turnDegrees(){
+        if(gyro.getYaw() - 87 < lastAngle){
+            m_drive.arcadeDrive(0, -0.2, false);
+            return false;
+        }
+        return true;
+    } 
     @Override
     public void teleopPeriodic() {
         doIntake();
         joystickButton();
         moveArm();
-
+        if(joystick.getRawButtonPressed(START)){
+            lastAngle = gyro.getYaw();
+            notToTurn = false;
+        }
+        if(!notToTurn){
+            notToTurn = turnDegrees();
+        }
+        else{
+            m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y)*SLOW_DRIVE, joystick.getRawAxis(LEFT_STICK_X)*SLOW_DRIVE);
+        }
         
-        
-        m_drive.arcadeDrive(joystick.getRawAxis(LEFT_STICK_Y)*SLOW_DRIVE, joystick.getRawAxis(LEFT_STICK_X)*SLOW_DRIVE);
     }   
     
     
