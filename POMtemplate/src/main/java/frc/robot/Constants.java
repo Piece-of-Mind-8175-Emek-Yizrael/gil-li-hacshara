@@ -41,10 +41,14 @@ public class Constants {
     public static final Double INTAKE_SPEED = 0.3;
     public static final Double LIFT_MOTOR_SPEED = 0.1;
     public static final Double SLOW_DRIVE = 0.5;
+    public static final Double TURN_SPEED = 0.2;
     public static final int LEFT_TALON_SRX = 2;
     public static final int LEFT_VICTOR_SPX = 1;
     public static final int RIGHT_TALON_SRX = 4;
     public static final int RIGHT_VICTOR_SPX = 3;
+    public static final int TURN_90_DEGREE = 90;
+    public static final int TURN_180_DEGREE = 175;
+    public static final int AUTO_DRIVE_TIME = 2;
 }
 
 

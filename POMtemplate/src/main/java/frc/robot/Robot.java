@@ -12,17 +12,7 @@
 
 package frc.robot;
 
-import static frc.robot.Constants.CLOSE_ARM_SPEED;
-import static frc.robot.Constants.FOLD;
-import static frc.robot.Constants.FOLD_OF_SET;
-import static frc.robot.Constants.GROUND;
-import static frc.robot.Constants.ID_INTAKE;
-import static frc.robot.Constants.INTAKE_POWER;
 import static frc.robot.Constants.*;
-import static frc.robot.Constants.JOYSTICK_PORT;
-import static frc.robot.Constants.KG;
-import static frc.robot.Constants.LIFT_MOTOR_SPEED;
-import static frc.robot.Constants.SLOW_DRIVE;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.A;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.B;
 import static frc.robot.POM_lib.Joysticks.JoystickConstants.LB;
@@ -52,6 +42,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -64,43 +55,54 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  * the project.
  */
 public class Robot extends TimedRobot {
-
+    
     
     private Command m_autonomousCommand;
-
+    
     private RobotContainer m_robotContainer;
-
+    
     private CANSparkMax intakeMotor = new CANSparkMax(ID_INTAKE, MotorType.kBrushless);
     Joystick joystick = new Joystick(JOYSTICK_PORT); 
-
+    
     private final CANSparkMax liftMotor = new CANSparkMax(5, com.revrobotics.CANSparkLowLevel.MotorType.kBrushless);
     private RelativeEncoder encoder = liftMotor.getEncoder();
     private ArmFeedforward ff = new ArmFeedforward(0, KG, 0);
-
+    
     DigitalInput foldSwitch = new DigitalInput(FOLD);
     DigitalInput groundSwitch = new DigitalInput(GROUND);
-
+    
     private boolean toClose = false;
     private boolean toOpen = false;
     private boolean isIntake = false;
     private boolean openClose = false;
     private boolean isIntakePositive = true;
     
-
-
+    
+    
     WPI_TalonSRX leftTalonSPX = new WPI_TalonSRX(LEFT_TALON_SRX);
     WPI_VictorSPX leftVictorSPX = new WPI_VictorSPX(LEFT_VICTOR_SPX);
     WPI_TalonSRX rightTalonSPX = new WPI_TalonSRX(RIGHT_TALON_SRX);
     WPI_VictorSPX rightVictorSPX = new WPI_VictorSPX(RIGHT_VICTOR_SPX);
-
+    
     PigeonIMU gyro = new PigeonIMU(7);
     private double lastAngle = 0;
     private boolean notToTurn = true;
-
+    
+    private Timer timer = new Timer();
     private final DifferentialDrive m_drive =
-      new DifferentialDrive(leftTalonSPX::set, rightTalonSPX::set);
-
-
+    new DifferentialDrive(leftTalonSPX::set, rightTalonSPX::set);
+    
+    private enum State{
+        OPEN_ARM,
+        DRIVE_AND_INTAKE,
+        CLOSE_ARM,
+        TURN_100_D,
+        DRIVE,
+        DEFAULT
+    }
+    private State state = State.OPEN_ARM;
+    
+    
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
@@ -120,6 +122,7 @@ public class Robot extends TimedRobot {
         encoder.setPositionConversionFactor((1.0 / 50) * (16.0 / 42) * 2 * Math.PI);
         leftVictorSPX.follow(leftTalonSPX);
         rightVictorSPX.follow(rightTalonSPX);
+        SmartDashboard.putString("state", "robot init");
     }
 
     /**
@@ -144,6 +147,9 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("this angle", gyro.getYaw());
         SmartDashboard.putNumber("last angle", lastAngle);
         SmartDashboard.putBoolean("to turn", !notToTurn);
+        SmartDashboard.putNumber("timer", timer.get());
+
+
 
 
         if(!foldSwitch.get()){
@@ -174,15 +180,78 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             m_autonomousCommand.schedule();
         }
+        timer.start();
+        state = State.OPEN_ARM;
     }
-
+    
     /**
-    * This function is called periodically during autonomous.
-    */
+     * This function is called periodically during autonomous.
+     */
     @Override
     public void autonomousPeriodic() {
-    }
-
+        // state = State.OPEN_ARM;
+        switch(state){
+            case OPEN_ARM:
+                if(groundSwitch.get()){
+                    liftMotor.set(LIFT_MOTOR_SPEED + resistGravity());   
+                } 
+                else{
+                    liftMotor.set(0);   
+                    state = State.DRIVE_AND_INTAKE;
+                    timer.restart();
+                    intakeMotor.set(-INTAKE_SPEED);
+                }
+                SmartDashboard.putString("state", "open arm");
+                break;
+            case DRIVE_AND_INTAKE:
+                m_drive.arcadeDrive(0, -0.2,false);
+                if(timer.get() > AUTO_DRIVE_TIME){
+                    m_drive.arcadeDrive(0, 0,false);
+                    state = State.CLOSE_ARM;
+                    intakeMotor.set(0);
+                }
+                SmartDashboard.putString("state", "drive and intake");
+                break;
+            case CLOSE_ARM:
+                if(foldSwitch.get()){
+                    liftMotor.set(-LIFT_MOTOR_SPEED + resistGravity());   
+                }
+                else{
+                    liftMotor.set(0);   
+                    state = State.TURN_100_D;
+                    lastAngle = gyro.getYaw();
+                }
+                SmartDashboard.putString("state", "close arm");
+                break;
+            case TURN_100_D:
+                if(gyro.getYaw() - TURN_180_DEGREE < lastAngle){
+                    m_drive.arcadeDrive(-TURN_SPEED, 0, false);
+                }
+                else{
+                    m_drive.arcadeDrive(0, 0, false);
+                    timer.restart();
+                    state = State.DRIVE;
+                }
+                SmartDashboard.putString("state", "180 turn");
+                break;
+            case DRIVE:
+                m_drive.arcadeDrive(0, -0.2,false);
+                if(timer.get() >= AUTO_DRIVE_TIME){
+                    m_drive.arcadeDrive(0, 0,false);
+                    state = State.DEFAULT;
+                    
+                }
+                SmartDashboard.putString("state", "drive");
+                break;
+            default:
+                m_drive.arcadeDrive(0, 0,false);
+                SmartDashboard.putString("state", "default");
+                break; 
+                
+                
+            }
+        }
+        
     @Override
     public void teleopInit() {
         // This makes sure that the autonomous stops running when
@@ -305,8 +374,8 @@ public class Robot extends TimedRobot {
         
     }
     private boolean turnDegrees(){
-        if(gyro.getYaw() - 87 < lastAngle){
-            m_drive.arcadeDrive(0, -0.2, false);
+        if(gyro.getYaw() - TURN_90_DEGREE < lastAngle){
+            m_drive.arcadeDrive(0, -TURN_SPEED, false);
             return false;
         }
         return true;
